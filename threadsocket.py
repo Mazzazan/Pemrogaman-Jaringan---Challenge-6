@@ -18,36 +18,32 @@ def clientthread(conn, addr):
             message = conn.recv(2048).decode()
             if message:
                 print(f"Received message from <{addr[0]}>: {message}")
-
-                splitted_message = message.split()
-                for i in splitted_message:
-                    if i in ['+', '-', '*', '/'] or i.isdigit():
-                        result = None
-                        operation_list = []
-                        for letter in splitted_message:
-                            operation_list.append(letter)
-                        operand_1 = operation_list[0]
-                        operator = operation_list[1]
-                        operand_2 = operation_list[2]
-                        
-                        if operator == '+':
-                            result = int(operand_1) + int(operand_2)
-                        elif operator == '-':
-                            result = int(operand_1) - int(operand_2)
-                        elif operator == '*':
-                            result = int(operand_1) * int(operand_2)
-                        elif operator == '/':
-                            result = int(operand_1) / int(operand_2)
+                
+                match = re.match(r"(\d+)\s*([\+\-\*\/])\s*(\d+)", message)
+                if match:
+                    num1 = int(match.group(1))
+                    operator = match.group(2)
+                    num2 = int(match.group(3))
+                    result = None
+                    if operator == '+':
+                        result = num1 + num2
+                    elif operator == '-':
+                        result = num1 - num2
+                    elif operator == '*':
+                        result = num1 * num2
+                    elif operator == '/':
+                        result = num1 / num2  
+                    
                     if result is not None:
-
-                        message_to_send = f"{operand_1}{operator}{operand_2}={result}\n".encode()
+                        
+                        message_to_send = f"{num1}{operator}{num2}={result}\n".encode()
                     else:
                         message_to_send = "Invalid operation.\n".encode()
                 else:
-
+                    
                     message_to_send = message.encode()
                 
-
+                
                 print(f"Sending: {message_to_send.decode()}")
                 broadcast(message_to_send, conn)
 
