@@ -18,7 +18,34 @@ def clientthread(conn, addr):
             if message:
                 print("<" + addr[0] + ">" + message)
                 message_to_send = "<" + addr[0] + ">" + message
+                for i in message.split():
+                    if i in ['+','-','*','/'] or i.isdigit():
+                        result = 0
+                        operation_list = []
+
+                        for letter in message:
+                            operation_list.append(letter)
+                        oprnd1 = operation_list[0]
+                        operation = operation_list[1]
+                        oprnd2 = operation_list[2]
+
+                        num1 = int(oprnd1)
+                        num2 = int(oprnd2)
+
+                        if operation == "+":
+                            result = num1 + num2
+                        elif operation == "-":
+                            result = num1 - num2
+                        elif operation == "/":
+                            result = num1 / num2
+                        elif operation == "*":
+                            result = num1 * num2
+                    
+                    
+                        output = str(result)
+                        message = message + "=" + output + "\n"
                 broadcast(message_to_send, conn)
+                
             else:
                 remove(conn)
         except:
