@@ -19,7 +19,7 @@ def send_msg(sock):
 def recv_msg(sock):
     while True:
         data = sock.recv(2048)
-        sys.stdout.write(data.encode())
+        sys.stdout.write(data.decode())
 
 Thread(target=send_msg, args=(server,)).start()
 Thread(target=recv_msg, args=(server,)).start()

@@ -2,6 +2,7 @@ import socket
 import select
 import sys
 import threading
+import re
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -14,42 +15,38 @@ list_of_client = []
 def clientthread(conn, addr):
     while True:
         try:
-            message = conn.recv(2048)
+            message = conn.recv(2048).decode()
             if message:
-                print("<" + addr[0] + ">" + message)
-                message_to_send = "<" + addr[0] + ">" + message
-                for i in message.split():
-                    if i in ['+','-','*','/'] or i.isdigit():
-                        result = 0
-                        operation_list = []
-
-                        for letter in message:
-                            operation_list.append(letter)
-                        oprnd1 = operation_list[0]
-                        operation = operation_list[1]
-                        oprnd2 = operation_list[2]
-
-                        num1 = int(oprnd1)
-                        num2 = int(oprnd2)
-
-                        if operation == "+":
-                            result = num1 + num2
-                        elif operation == "-":
-                            result = num1 - num2
-                        elif operation == "/":
-                            result = num1 / num2
-                        elif operation == "*":
-                            result = num1 * num2
+                print(f"Received message from <{addr[0]}>: {message}")
+                # Using regex to find operands and operator
+                match = re.match(r"(\d+)([\+\-\*\/])(\d+)", message)
+                if match:
+                    num1 = int(match.group(1))
+                    operator = match.group(2)
+                    num2 = int(match.group(3))
+                    result = None
+                    if operator == '+':
+                        result = num1 + num2
+                    elif operator == '-':
+                        result = num1 - num2
+                    elif operator == '*':
+                        result = num1 * num2
+                    elif operator == '/':
+                        result = num1 / num2  # Note: handle division by zero
                     
-                    
-                        output = str(result)
-                        message = message + "=" + output + "\n"
-                broadcast(message_to_send, conn)
-                
+                    if result is not None:
+                        client_msg = message + " = " + str(result)
+                        message_to_send = client_msg.encode()
+                        print(f"Sending result: {message_to_send.decode()}")
+                        broadcast(message_to_send, conn)
+                else:
+                    print("Invalid message format.")
             else:
                 remove(conn)
-        except:
+        except Exception as e:
+            print(f"An error occurred: {e}")
             continue
+        
 def broadcast(message, connection):
     for clients in list_of_client:
         if clients!=connection:
